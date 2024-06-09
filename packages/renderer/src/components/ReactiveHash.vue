@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
-import {sha256sum} from '#preload';
+import { computed, ref } from "vue";
+import { sha256sum } from "#preload";
 
-const rawString = ref('Hello World');
+const rawString = ref("Hello World");
 const hashedString = computed(() => sha256sum(rawString.value));
 </script>
 
