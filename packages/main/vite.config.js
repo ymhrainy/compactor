@@ -14,7 +14,8 @@ const config = {
   envDir: PROJECT_ROOT,
   resolve: {
     alias: {
-      "/@/": join(PACKAGE_ROOT, "src") + "/",
+      "@/": join(PACKAGE_ROOT, "src") + "/",
+      "@shared/": join(PROJECT_ROOT, "packages/shared") + "/",
     },
   },
   build: {

@@ -1,7 +1,7 @@
 /**
  * @module preload
  */
+export { selectDirAndCompressImages } from "./compress";
 
-import { sha256sum } from "./nodeCrypto";
-import { versions } from "./versions";
-export { sha256sum, versions };
+export { sha256sum } from "./node-crypto";
+export { versions } from "./versions";

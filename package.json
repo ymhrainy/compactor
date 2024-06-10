@@ -1,7 +1,7 @@
 {
   "name": "compactor",
   "description": "Simple offline image compressor app for pc",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.2.0",
@@ -32,6 +32,8 @@
     "format": "npx prettier --write \"**/*.{js,mjs,cjs,ts,mts,cts,vue,json}\""
   },
   "devDependencies": {
+    "@arco-design/web-vue": "^2.55.3",
+    "@arco-plugins/vite-vue": "^1.4.5",
     "@types/node": "20.14.2",
     "@typescript-eslint/eslint-plugin": "7.12.0",
     "@vitejs/plugin-vue": "5.0.5",
@@ -42,6 +44,7 @@
     "eslint": "8.57.0",
     "eslint-plugin-vue": "9.26.0",
     "happy-dom": "14.12.0",
+    "less": "^4.2.0",
     "nano-staged": "0.8.0",
     "playwright": "1.44.1",
     "prettier": "^3.3.1",
@@ -54,6 +57,7 @@
     "vue-tsc": "2.0.21"
   },
   "dependencies": {
-    "electron-updater": "6.2.1"
+    "electron-updater": "6.2.1",
+    "sharp": "^0.33.4"
   }
 }

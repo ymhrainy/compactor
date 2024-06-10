@@ -1,8 +1,9 @@
 import { app } from "electron";
 import "./security-restrictions";
-import { restoreOrCreateWindow } from "/@/mainWindow";
+import { restoreOrCreateWindow } from "@/main-window";
 import { platform } from "node:process";
 import updater from "electron-updater";
+import { initCompressorInfra } from "./compressor";
 
 /**
  * Prevent electron from running multiple instances.
@@ -38,7 +39,10 @@ app.on("activate", restoreOrCreateWindow);
  */
 app
   .whenReady()
-  .then(restoreOrCreateWindow)
+  .then(() => {
+    initCompressorInfra();
+    restoreOrCreateWindow();
+  })
   .catch((e) => console.error("Failed create window:", e));
 
 /**

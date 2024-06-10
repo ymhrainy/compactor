@@ -1,9 +1,11 @@
 /* eslint-env node */
+import { join } from "node:path";
 
-import { chrome } from "../../.electron-vendors.cache.json";
 import vue from "@vitejs/plugin-vue";
 import { renderer } from "unplugin-auto-expose";
-import { join } from "node:path";
+import { vitePluginForArco } from "@arco-plugins/vite-vue";
+
+import { chrome } from "../../.electron-vendors.cache.json";
 
 const PACKAGE_ROOT = __dirname;
 const PROJECT_ROOT = join(PACKAGE_ROOT, "../..");
@@ -43,6 +45,7 @@ const config = {
   },
   plugins: [
     vue(),
+    vitePluginForArco(),
     renderer.vite({
       preloadEntry: join(PACKAGE_ROOT, "../preload/src/index.ts"),
     }),

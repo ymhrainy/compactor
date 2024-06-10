@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "module": "esnext",
     "target": "esnext",
     "sourceMap": false,
@@ -12,7 +13,8 @@
     "baseUrl": ".",
     "paths": {
       "#preload": ["../preload/src/index"],
-      "/@/*": ["./src/*"]
+      "/@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     },
     "lib": ["ESNext", "dom", "dom.iterable"]
   },
