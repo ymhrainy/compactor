@@ -6,125 +6,147 @@ import { type OpenDialogReturnValue, ipcRenderer } from "electron";
 import { execCompressTask } from "./utils/image";
 
 import { IPC_CHANNEL } from "@shared/constants";
-import type {
-  CompressTaskFile,
-  CompressTaskSource,
-  CompressTaskSourceType,
-  Dir,
-  Filepath,
-  ImageType,
-  OnProgress,
-  Quality,
+import {
+  type CompressTask,
+  type CompressTaskFile,
+  type CompressTaskPreview,
+  type CompressTaskPreviewFile,
+  type CompressTaskSource,
+  type CompressTaskSourceType,
+  type Dir,
+  type Filepath,
+  type OnProgress,
+  type Quality,
 } from "@shared/types";
+import { IMAGE_TYPE, type ImageType } from "@shared/image";
 
 export async function waitForUserToChooseSource(
   sourceType: CompressTaskSourceType,
-): Promise<CompressTaskSource> {
+): Promise<CompressTaskPreview | null> {
+  let source;
   if (sourceType === "dir") {
-    return await waitForUserToChooseDir();
+    source = await waitForUserToChooseDir();
   } else {
-    return waitForUserToChooseFiles();
+    source = await waitForUserToChooseFiles();
   }
-}
-
-export async function prepareCompressTaskFromSource(
-  source: CompressTaskSource,
-  quality: Quality,
-): Promise<CompressTaskFile[]> {
-  if (source.kind === "dir") {
-    return await prepareCompressTaskFromDir(source.dir, quality);
-  } else {
-    return await prepareCompressTaskFromFiles(source.filepaths, quality);
-  }
+  return source ? prepareCompressTaskFromSource(source) : null;
 }
 
 export async function confirmCompressImages(
-  source: CompressTaskSource,
-  files: CompressTaskFile[],
+  preview: CompressTaskPreview,
+  quality: Quality,
   onProgress?: OnProgress,
 ) {
-  await execCompressTask({
-    source,
+  const files = await previewFilesToCompressTaskFiles(
+    preview.previewFiles,
+    preview.outDir,
+    quality,
+  );
+  const task: CompressTask = {
+    source: preview.source,
     files,
     options: { onProgress },
     startAt: Date.now(),
-  });
+  };
+  await execCompressTask(task);
+  return { task };
 }
 
-async function waitForUserToChooseDir(): Promise<CompressTaskSource> {
+async function previewFilesToCompressTaskFiles(
+  previewFiles: CompressTaskPreviewFile[],
+  outDir: Dir,
+  quality: Quality,
+): Promise<CompressTaskFile[]> {
+  const taskFiles: CompressTaskFile[] = [];
+  await fsPromises.mkdir(outDir, { recursive: true });
+  for (const f of previewFiles) {
+    const filename = path.basename(f.input);
+    const output = path.join(outDir, filename);
+    taskFiles.push({
+      ...f,
+      output,
+      options: {
+        quality,
+      },
+    });
+  }
+  return taskFiles;
+}
+
+async function prepareCompressTaskFromSource(
+  source: CompressTaskSource,
+): Promise<CompressTaskPreview> {
+  let previewFiles;
+  if (source.kind === "dir") {
+    previewFiles = await prepareCompressTaskFromDir(source.dir);
+  } else {
+    previewFiles = prepareCompressTaskFromFiles(source.filepaths);
+  }
+  const outDir = getDefaultOutDirFromSource(source);
+  return {
+    source,
+    outDir,
+    previewFiles,
+  };
+}
+
+function getDefaultOutDirFromSource(source: CompressTaskSource): Dir {
+  if (source.kind === "dir") {
+    return path.join(source.dir, "compressed");
+  } else {
+    const firstFilepath = source.filepaths[0];
+    const baseDir = path.dirname(firstFilepath);
+    return path.join(baseDir, "compressed");
+  }
+}
+
+async function waitForUserToChooseDir(): Promise<CompressTaskSource | null> {
   const result: OpenDialogReturnValue = await ipcRenderer.invoke(
     IPC_CHANNEL.mShowOpenDialog,
     "dir",
   );
+  if (result.canceled) return null;
   return { dir: result.filePaths[0], kind: "dir" };
 }
 
-async function waitForUserToChooseFiles(): Promise<CompressTaskSource> {
+async function waitForUserToChooseFiles(): Promise<CompressTaskSource | null> {
   const result: OpenDialogReturnValue = await ipcRenderer.invoke(
     IPC_CHANNEL.mShowOpenDialog,
     "files",
   );
+  if (result.canceled) return null;
   return { kind: "files", filepaths: result.filePaths };
 }
 
-async function prepareCompressTaskFromFiles(
-  files: Filepath[],
-  quality: Quality,
-): Promise<CompressTaskFile[]> {
-  const result: CompressTaskFile[] = [];
-  for (const fp of files) {
-    let imageType: ImageType;
-    if (fp.toLowerCase().endsWith(".jpg") || fp.toLowerCase().endsWith(".jpeg")) {
-      imageType = "jpg";
-    } else if (fp.toLowerCase().endsWith(".png")) {
-      imageType = "png";
-    } else {
-      continue;
-    }
-    const dir = path.dirname(fp);
-    const filename = path.basename(fp);
-    const outDir = path.resolve(dir, "compressed");
-    if (imageType) {
-      const output = path.join(outDir, filename);
-      result.push({
-        input: fp,
-        output,
-        imageType,
-        options: {
-          quality,
-        },
-      });
-    }
+function createPreviewFileFromFilepath(fp: Filepath): CompressTaskPreviewFile | null {
+  let imageType: ImageType | undefined = undefined;
+  const lowerFilename = path.basename(fp).toLowerCase();
+  if (lowerFilename.endsWith(".jpg") || lowerFilename.endsWith(".jpeg")) {
+    imageType = IMAGE_TYPE.jpeg;
+  } else if (lowerFilename.endsWith(".png")) {
+    imageType = IMAGE_TYPE.png;
+  } else if (lowerFilename.endsWith(".webp")) {
+    imageType = IMAGE_TYPE.webp;
+  } else if (lowerFilename.endsWith(".avif")) {
+    imageType = IMAGE_TYPE.avif;
+  } else if (lowerFilename.endsWith(".tiff")) {
+    imageType = IMAGE_TYPE.tiff;
   }
-  return result;
+  return imageType ? { imageType, input: fp } : null;
 }
 
-async function prepareCompressTaskFromDir(dir: Dir, quality: Quality): Promise<CompressTaskFile[]> {
-  const files = await fsPromises.readdir(dir);
-  const outDir = path.resolve(dir, "compressed");
-  await fsPromises.mkdir(outDir, { recursive: true });
-  const result: CompressTaskFile[] = [];
-  for (const name of files) {
-    let imageType: ImageType;
-    if (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg")) {
-      imageType = "jpg";
-    } else if (name.toLowerCase().endsWith(".png")) {
-      imageType = "png";
-    } else {
-      continue;
-    }
-    if (imageType) {
-      const input = path.join(dir, name);
-      const output = path.join(outDir, name);
-      result.push({
-        input,
-        output,
-        imageType,
-        options: {
-          quality,
-        },
-      });
-    }
+function prepareCompressTaskFromFiles(files: Filepath[]): CompressTaskPreviewFile[] {
+  return files
+    .map(createPreviewFileFromFilepath)
+    .filter((pf) => pf !== null) as CompressTaskPreviewFile[];
+}
+
+async function prepareCompressTaskFromDir(dir: Dir): Promise<CompressTaskPreviewFile[]> {
+  const filenames = await fsPromises.readdir(dir);
+  const filepaths: Filepath[] = [];
+  for (const name of filenames) {
+    const input = path.join(dir, name);
+    filepaths.push(input);
   }
-  return result;
+  return prepareCompressTaskFromFiles(filepaths);
 }

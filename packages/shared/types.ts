@@ -1,10 +1,10 @@
+import type { ImageType } from "./image";
+
 export type Dir = string;
 export type Filepath = string;
 export type Timestamp = number;
 export type Quality = number;
-export type ImgPng = "png";
-export type ImgJpg = "jpg";
-export type ImageType = ImgJpg | ImgPng;
+
 type CompressTaskSourceTypeDir = "dir";
 type CompressTaskSourceTypeFiles = "files";
 export type CompressTaskSourceType = CompressTaskSourceTypeDir | CompressTaskSourceTypeFiles;
@@ -43,6 +43,14 @@ type CompressTaskSourceFiles = {
 };
 
 export type CompressTaskSource = CompressTaskSourceDir | CompressTaskSourceFiles;
+
+export type CompressTaskPreviewFile = Pick<CompressTaskFile, "imageType" | "input">;
+
+export type CompressTaskPreview = {
+  source: CompressTaskSource;
+  previewFiles: CompressTaskPreviewFile[];
+  outDir: Dir;
+};
 
 export type CompressTask = {
   source: CompressTaskSource;

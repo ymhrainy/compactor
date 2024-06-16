@@ -1,51 +1,26 @@
 import sharp from "sharp";
 
-import type { CompressTask, CompressTaskFile } from "@shared/types";
+import { type CompressTask, type CompressTaskFile } from "@shared/types";
+import { COMPRESS_IMAGE_TYPES } from "@shared/image";
 
-function compressImageJpeg(file: CompressTaskFile): Promise<CompressTaskFile> {
-  const { input, output, options } = file;
-  return new Promise((resolve, reject) => {
-    sharp(input)
-      .jpeg({
-        quality: options.quality,
-      })
-      .withMetadata({ density: 300 })
-      .toFile(output, (err: unknown) => {
-        if (err) {
-          console.error("sharp to file error: ", err, "dest:", output);
-          reject(err);
-        } else {
-          resolve(file);
-        }
-      });
-  });
-}
+function compressImage(compressFile: CompressTaskFile): Promise<CompressTaskFile> {
+  const { input, output, options, imageType } = compressFile;
+  const sharpObj = sharp(input);
 
-function compressImagePng(file: CompressTaskFile): Promise<CompressTaskFile> {
-  const { input, output, options } = file;
-  return new Promise((resolve, reject) => {
-    sharp(input)
-      .png({
-        quality: options.quality,
-      })
-      .toFile(output, (err: unknown) => {
-        if (err) {
-          console.error("sharp to file error: ", err, "dest:", output);
-          reject(err);
-        } else {
-          resolve(file);
-        }
-      });
-  });
-}
-
-export async function compressImage(compressFile: CompressTaskFile) {
-  const { imageType } = compressFile;
-  if (imageType === "jpg") {
-    await compressImageJpeg(compressFile);
-  } else if (imageType === "png") {
-    await compressImagePng(compressFile);
+  if (COMPRESS_IMAGE_TYPES.includes(imageType)) {
+    sharpObj[imageType]({ quality: options.quality });
   }
+  // sharpObj.withMetadata({ density: 300 })
+  return new Promise((resolve, reject) => {
+    sharpObj.toFile(output, (err: unknown) => {
+      if (err) {
+        console.error("sharp to file error: ", err, "dest:", output);
+        reject(err);
+      } else {
+        resolve(compressFile);
+      }
+    });
+  });
 }
 
 export async function execCompressTask(task: CompressTask) {

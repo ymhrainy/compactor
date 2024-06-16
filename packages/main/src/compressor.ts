@@ -1,6 +1,7 @@
 import { dialog, ipcMain } from "electron";
 
 import { IPC_CHANNEL } from "@shared/constants";
+import { CHOOSE_FILE_EXTENSIONS } from "@shared/image";
 
 export function initCompressorInfra() {
   ipcMain.handle(IPC_CHANNEL.mShowOpenDialog, async (e, type: "dir" | "files") => {
@@ -11,7 +12,7 @@ export function initCompressorInfra() {
     } else {
       return await dialog.showOpenDialog({
         properties: ["openFile", "multiSelections"],
-        filters: [{ name: "Image", extensions: ["png", "jpg", "jpeg"] }],
+        filters: [{ name: "Image", extensions: CHOOSE_FILE_EXTENSIONS }],
       });
     }
   });

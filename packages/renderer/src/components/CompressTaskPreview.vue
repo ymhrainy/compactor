@@ -9,10 +9,10 @@
 </template>
 
 <script setup lang="ts">
-import type { CompressTaskFile } from "@shared/types";
+import type { CompressTaskPreviewFile } from "@shared/types";
 
 defineProps<{
-  files: CompressTaskFile[];
+  files: CompressTaskPreviewFile[];
 }>();
 </script>
 
