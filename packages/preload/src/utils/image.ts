@@ -1,50 +1,61 @@
-import path from "node:path";
-import fsPromises from "node:fs/promises";
-
 import sharp from "sharp";
 
-type CompressImageResult = {
-  //
-};
+import type { CompressTask, CompressTaskFile } from "@shared/types";
 
-function compressOneJpg(sourceFilepath: string, outDir = ""): Promise<CompressImageResult> {
-  const filename = path.basename(sourceFilepath);
-  const baseDir = outDir || path.dirname(sourceFilepath);
-  const newFileName = filename
-    .replace(".jpg", ".compressed.jpg")
-    .replace(".jpeg", ".compressed.jpeg");
-  const destFilepath = path.join(baseDir, newFileName);
+function compressImageJpeg(file: CompressTaskFile): Promise<CompressTaskFile> {
+  const { input, output, options } = file;
   return new Promise((resolve, reject) => {
-    sharp(sourceFilepath)
+    sharp(input)
       .jpeg({
-        quality: 85,
+        quality: options.quality,
       })
       .withMetadata({ density: 300 })
-      .toFile(destFilepath, (err: unknown) => {
+      .toFile(output, (err: unknown) => {
         if (err) {
-          console.error("sharp to file error: ", err, "dest:", destFilepath);
+          console.error("sharp to file error: ", err, "dest:", output);
           reject(err);
         } else {
-          resolve({});
+          resolve(file);
         }
       });
   });
 }
 
-export type CompressProgress = {
-  total: number;
-  finished: number;
-  progress: number;
-};
+function compressImagePng(file: CompressTaskFile): Promise<CompressTaskFile> {
+  const { input, output, options } = file;
+  return new Promise((resolve, reject) => {
+    sharp(input)
+      .png({
+        quality: options.quality,
+      })
+      .toFile(output, (err: unknown) => {
+        if (err) {
+          console.error("sharp to file error: ", err, "dest:", output);
+          reject(err);
+        } else {
+          resolve(file);
+        }
+      });
+  });
+}
 
-export async function compressDir(dirPath: string) {
-  const files = await fsPromises.readdir(dirPath);
-  const outDir = path.resolve(dirPath, "compressed");
-  await fsPromises.mkdir(outDir, { recursive: true });
-  for (const name of files) {
-    if (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg")) {
-      const fp = path.join(dirPath, name);
-      await compressOneJpg(fp, outDir);
-    }
+export async function compressImage(compressFile: CompressTaskFile) {
+  const { imageType } = compressFile;
+  if (imageType === "jpg") {
+    await compressImageJpeg(compressFile);
+  } else if (imageType === "png") {
+    await compressImagePng(compressFile);
+  }
+}
+
+export async function execCompressTask(task: CompressTask) {
+  const { files, options } = task;
+  const { onProgress } = options;
+  const total = files.length;
+  let finished = 0;
+  for (const file of files) {
+    await compressImage(file);
+    finished += 1;
+    onProgress && onProgress({ total, finished, progress: finished / total });
   }
 }
