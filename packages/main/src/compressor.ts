@@ -1,4 +1,4 @@
-import { dialog, ipcMain } from "electron";
+import { dialog, ipcMain, shell } from "electron";
 
 import { IPC_CHANNEL } from "@shared/constants";
 import { CHOOSE_FILE_EXTENSIONS } from "@shared/image";
@@ -15,5 +15,9 @@ export function initCompressorInfra() {
         filters: [{ name: "Image", extensions: CHOOSE_FILE_EXTENSIONS }],
       });
     }
+  });
+
+  ipcMain.on(IPC_CHANNEL.mShowItemInFolder, (e, path: string) => {
+    shell.showItemInFolder(path);
   });
 }

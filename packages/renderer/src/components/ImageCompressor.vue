@@ -69,7 +69,7 @@
 import { ref, toRaw } from "vue";
 import { Button, Message, Progress } from "@arco-design/web-vue";
 
-import { waitForUserToChooseSource, confirmCompressImages } from "#preload";
+import { waitForUserToChooseSource, confirmCompressImages, showItemInFolder } from "#preload";
 import type { CompressTaskPreview, CompressTaskSourceType, OnProgress } from "@shared/types";
 
 import CompressTaskPreviewVue from "./CompressTaskPreview.vue";
@@ -89,6 +89,7 @@ const preview = ref<CompressTaskPreview | null>(null);
 async function confirmTask() {
   if (!preview.value) throw new Error("Lacks task source");
   await confirmCompressImages(toRaw(preview.value), quality.value, onProgress);
+  showItemInFolder(preview.value.outDir);
   Message.success("压缩完成");
 }
 
