@@ -10,7 +10,7 @@ function compressImage(compressFile: CompressTaskFile): Promise<CompressTaskFile
   if (COMPRESS_IMAGE_TYPES.includes(imageType)) {
     sharpObj[imageType]({ quality: options.quality });
   }
-  // sharpObj.withMetadata({ density: 300 })
+  sharpObj.withMetadata();
   return new Promise((resolve, reject) => {
     sharpObj.toFile(output, (err: unknown) => {
       if (err) {
