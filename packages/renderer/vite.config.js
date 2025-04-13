@@ -50,6 +50,16 @@ const config = {
       preloadEntry: join(PACKAGE_ROOT, "../preload/src/index.ts"),
     }),
   ],
+  css: {
+    preprocessorOptions: {
+      less: {
+        modifyVars: {
+          "arcoblue-6": "#415268",
+        },
+        javascriptEnabled: true,
+      },
+    },
+  },
 };
 
 export default config;
