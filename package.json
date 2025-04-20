@@ -1,6 +1,7 @@
 {
   "name": "compactor",
-  "description": "Simple offline image compressor app for pc",
+  "productName": "Compactor",
+  "description": "Compress images performant",
   "version": "1.0.0",
   "private": true,
   "type": "module",
