@@ -1,7 +1,8 @@
 name: Release
 on:
-  label:
-    types: [created]
+  push:
+    tags:
+      - 'v*'
 
 concurrency:
   group: release-${{ github.ref }}
