@@ -5,5 +5,16 @@ directories:
 files:
   - packages/**/dist/**
 
+win:
+  target:
+    - nsis
+    - portable
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  
+nsis:
+  oneClick: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
 linux:
   target: deb
