@@ -22,20 +22,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: |
-          npm install -g pnpm
-          pnpm ci
+        run:
+          pnpm i
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
       - name: Compile application for Windows
-        run: pnpm run compile --win
+        run: pnpm run compile
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
